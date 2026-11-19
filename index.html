@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<!--
+  AvisaRua - Desafio FIAP CitizenTech
+  Protótipo navegável feito só com HTML, CSS e JavaScript (sem biblioteca nenhuma).
+  Cristopher Lucas - RM566909
+  Os números e nomes (ruas, abrigo, porcentagens) são exemplos inventados para a demonstração.
+-->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AvisaRua - Protótipo</title>
+<style>
+/* ===== Cores e fonte =====
+   Está no MODO ESCURO. Para voltar ao claro, apague o bloco ":root" de baixo
+   e tire os comentários do bloco claro. */
+:root{
+  --bg:#0e1a22; --ink:#e8eff4; --muted:#9db0bd; --card:#17262f; --line:#27404e;
+  --brand:#46b3cc; --brand-ink:#06232c; --alert:#ff8a50; --alert-bg:#3a1f12;
+  --ok:#69db7c; --ok-bg:#16301d; --warn:#f08c00; --water:#2d6f88;
+  --warn-bg:#3a2e0a; --warn-ink:#ffd166;
+  --fonte:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+  color-scheme:dark;
+}
+/* Modo claro (tire o comentário e apague o bloco escuro acima):
+:root{
+  --bg:#eef2f5; --ink:#12222e; --muted:#5b6b78; --card:#ffffff; --line:#dbe3e9;
+  --brand:#0b5e73; --brand-ink:#ffffff; --alert:#d9480f; --alert-bg:#fff1e8;
+  --ok:#2b8a3e; --ok-bg:#e6f4ea; --warn:#f08c00; --water:#9fd3e6;
+  --warn-bg:#fff4d6; --warn-ink:#8a5a00;
+  --fonte:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+}
+*/
+/* ===== Página: roteiro à esquerda e celular no meio ===== */
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--fonte);font-size:16px}
+.stage{min-height:100%;display:flex;gap:40px;justify-content:center;align-items:center;padding:24px 16px;flex-wrap:wrap}
+.guide{max-width:340px}
+.guide h1{font-family:var(--fonte);font-size:28px;line-height:1.15;text-wrap:balance}
+.guide p{color:var(--muted);margin:10px 0 18px;line-height:1.5}
+.steps{list-style:none;padding:0;display:grid;gap:6px}
+.steps li{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-size:14px;cursor:pointer}
+.steps li.grp{border:0;background:none;padding:6px 2px 0;font-size:12px;font-weight:700;color:var(--muted);cursor:default;letter-spacing:1px}
+.steps li b{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--line);font-size:12px;flex:none}
+.steps li.on{border-color:var(--brand)}
+.steps li.on b{background:var(--brand);color:var(--brand-ink)}
+/* ===== Celular e telas ===== */
+.phone{width:360px;height:740px;border-radius:38px;background:#000;padding:10px;box-shadow:0 20px 50px rgba(0,0,0,.25);flex:none}
+.screen{position:relative;width:100%;height:100%;border-radius:30px;overflow:hidden;background:var(--card);display:flex;flex-direction:column}
+.status{height:28px;display:flex;justify-content:space-between;align-items:center;padding:0 20px;font-size:12px;font-weight:600;flex:none}
+.view{display:none;flex:1;flex-direction:column;min-height:0}
+.view.on{display:flex}
+.body{flex:1;overflow:auto;padding:16px}
+/* ===== Textos, botões e formulário ===== */
+h2{font-family:var(--fonte);font-size:22px;line-height:1.2;text-wrap:balance}
+h3{font-family:var(--fonte);font-size:15px}
+.sub{color:var(--muted);font-size:14px;line-height:1.45;margin-top:6px}
+button{font:inherit;cursor:pointer;border:0}
+button:focus-visible,.steps li:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
+.btn{display:block;width:100%;padding:14px;border-radius:14px;background:var(--brand);color:var(--brand-ink);font-weight:700;font-size:16px;margin-top:12px}
+.btn.alert{background:var(--alert);color:var(--brand-ink)}
+.btn.ghost{background:transparent;color:var(--brand);border:2px solid var(--brand)}
+.field{display:block;margin-top:14px;font-size:13px;font-weight:600}
+.field input{display:block;width:100%;margin-top:6px;padding:13px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:16px}
+/* ===== Menu de baixo ===== */
+.tabs{display:flex;border-top:1px solid var(--line);flex:none}
+.tabs button{flex:1;padding:10px 4px 12px;background:none;color:var(--muted);font-size:11px;font-weight:600;display:grid;gap:3px;justify-items:center}
+.tabs button.on{color:var(--brand)}
+.tabs svg{width:22px;height:22px}
+/* ===== Mapas, etiquetas e cartões ===== */
+.map{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line)}
+.map svg{display:block;width:100%;height:auto}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.pill.alert{background:var(--alert-bg);color:var(--alert)}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+.pill.warn{background:var(--warn-bg);color:var(--warn-ink)}
+.pill.val{background:var(--bg);color:var(--muted);border:1px dashed var(--muted)}
+.zone{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:14px;margin-top:8px;background:var(--card)}
+.zone .pc{font-family:var(--fonte);font-weight:800;font-size:20px;min-width:52px}
+.zone h3{font-size:14px}
+.zone p{font-size:12px;color:var(--muted);line-height:1.35;margin-top:2px}
+.st{display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:14px;line-height:1.4}
+.st i{font-style:normal;flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;background:var(--ok-bg);color:var(--ok)}
+.st i.wait{background:var(--bg);color:var(--muted);border:1.5px dashed var(--muted)}
+.card{border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px;background:var(--card)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.alertbar{background:var(--alert);color:var(--brand-ink);padding:10px 16px;font-weight:700;font-size:14px;display:flex;gap:8px;align-items:center}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chip{padding:9px 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font-size:13px;font-weight:600}
+.chip.on{border-color:var(--brand);background:var(--brand);color:var(--brand-ink)}
+/* ===== Notificação (toast) e barra de progresso ===== */
+.toast{position:absolute;left:16px;right:16px;top:36px;background:#12222e;color:#fff;border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.35;transform:translateY(-140%);opacity:0;transition:transform .35s,opacity .35s;z-index:5;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.toast.on{transform:none;opacity:1}
+.toast b{display:block;color:#ffb48a}
+.meter{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:8px}
+.meter i{display:block;height:100%;background:var(--ok);transition:width 1.2s linear;width:0}
+.big{font-family:var(--fonte);font-size:40px;font-weight:800}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--water);display:grid;place-items:center;font-weight:700;color:#fff;flex:none}
+@media (max-width:420px){.phone{width:100%;max-width:360px;height:700px}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <aside class="guide">
+    <h1>AvisaRua: alerta de enchente por rua, com rota segura</h1>
+    <p>No Jardim Esperança, o alerta chega para todos. Dona Maria sai para o abrigo e Seu José fica em casa e relata a água. Os dois alimentam o mapa de enchentes. Toque nos botões do celular ou nos passos abaixo.</p>
+    <ol class="steps" id="steps"></ol>
+  </aside>
+
+  <div class="phone"><div class="screen" id="screen">
+    <div class="toast" id="toast" role="status"></div>
+    <div class="status"><span id="clock">14:02</span><span>5G ▮▮▮</span></div>
+
+    <!-- 1 Entrada -->
+    <section class="view on" id="v-login" aria-label="Entrada">
+      <div class="body">
+        <svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true"><rect width="56" height="56" rx="16" fill="var(--brand)"/><path d="M28 12c6 8 10 13 10 19a10 10 0 0 1-20 0c0-6 4-11 10-19z" fill="#fff"/><path d="M20 38c3-3 5 3 8 0s5 3 8 0" stroke="var(--brand)" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+        <h2 style="margin-top:16px">Bem-vinda ao AvisaRua</h2>
+        <p class="sub">Receba aviso antes da água chegar na sua rua, com o caminho mais seguro até um abrigo. Funciona também por SMS, sem internet.</p>
+        <label class="field" for="tel">Seu celular<input id="tel" value="(51) 98765-4321" inputmode="tel"></label>
+        <label class="field" for="end">Seu endereço<input id="end" value="Rua das Palmeiras, 120"></label>
+        <p class="sub" style="font-size:12px">Usamos seu endereço só para avisar sobre a sua rua. Você pode apagar seus dados quando quiser (LGPD).</p>
+        <button class="btn" data-go="home">Entrar</button>
+      </div>
+    </section>
+
+    <!-- 2 Mapa de risco -->
+    <section class="view" id="v-home" aria-label="Mapa de risco">
+      <div class="body">
+        <div class="row"><div><h2>Olá, Maria</h2><p class="sub">Jardim Esperança</p></div><span class="pill ok">● Sem alerta</span></div>
+        <div class="map" style="margin-top:12px">
+          <svg viewBox="0 0 320 168" role="img" aria-label="Mapa do bairro: área de risco junto ao rio, abrigo a 400 metros, rota segura e sua localização">
+            <defs><linearGradient id="rk" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="var(--alert)" stop-opacity=".38"/><stop offset="1" stop-color="var(--alert)" stop-opacity=".05"/></linearGradient></defs>
+            <rect width="320" height="168" fill="var(--bg)"/>
+            <g fill="var(--line)" opacity=".8">
+              <rect x="12" y="12" width="52" height="18" rx="4"/><rect x="76" y="12" width="78" height="18" rx="4"/><rect x="166" y="12" width="78" height="18" rx="4"/><rect x="256" y="12" width="52" height="18" rx="4"/>
+              <rect x="12" y="42" width="52" height="36" rx="4"/><rect x="166" y="42" width="78" height="36" rx="4"/><rect x="256" y="42" width="52" height="36" rx="4"/>
+              <rect x="12" y="90" width="52" height="36" rx="4"/><rect x="76" y="90" width="78" height="36" rx="4"/><rect x="166" y="90" width="78" height="36" rx="4"/><rect x="256" y="90" width="52" height="36" rx="4"/>
+              <rect x="12" y="138" width="52" height="16" rx="4"/><rect x="76" y="138" width="78" height="16" rx="4"/><rect x="166" y="138" width="78" height="16" rx="4"/><rect x="256" y="138" width="52" height="16" rx="4"/>
+            </g>
+            <rect x="76" y="42" width="78" height="36" rx="8" fill="var(--ok-bg)"/>
+            <path d="M6 176 V112 Q6 100 20 100 H214 Q232 100 238 112 Q244 122 262 122 H300 Q314 122 314 136 V158 Q314 164 306 164 H14 Q6 164 6 158Z" fill="url(#rk)" stroke="var(--alert)" stroke-width="1.8" stroke-dasharray="6 5"/>
+            
+            <rect x="14" y="103" width="82" height="15" rx="7.5" fill="var(--card)" stroke="var(--alert)" stroke-width="1.2"/>
+            <text x="20" y="114" font-size="9" font-weight="800" fill="var(--alert)">ÁREA DE RISCO</text>
+            <path d="M160 132V84H250V36" stroke="var(--ok)" stroke-width="3.5" stroke-linejoin="round" fill="none" stroke-dasharray="1 7" stroke-linecap="round"/>
+            <text x="20" y="136" font-size="8.5" font-weight="600" fill="var(--muted)" stroke="var(--card)" stroke-width="3" paint-order="stroke">R. das Palmeiras</text>
+            <path d="M250 8c-9 0-15 6-15 14 0 10 15 22 15 22s15-12 15-22c0-8-6-14-15-14z" fill="var(--ok)" stroke="#fff" stroke-width="2"/>
+            <text x="244.5" y="28" font-size="14" fill="#fff" font-weight="800">+</text>
+            <text x="268" y="22" font-size="10" font-weight="800" fill="var(--ok)" stroke="var(--card)" stroke-width="3" paint-order="stroke">Abrigo</text><text x="268" y="33" font-size="9" font-weight="600" fill="var(--muted)" stroke="var(--card)" stroke-width="3" paint-order="stroke">400 m</text>
+            <circle cx="160" cy="132" r="15" fill="var(--brand)" opacity=".2"/>
+            <circle cx="160" cy="132" r="8" fill="var(--brand)" stroke="#fff" stroke-width="3"/>
+            <text x="172" y="146" font-size="10.5" font-weight="800" fill="var(--ink)" stroke="var(--card)" stroke-width="3" paint-order="stroke">Você</text>
+            <path d="M16 156h40" stroke="var(--ink)" stroke-width="2"/><text x="60" y="159" font-size="8.5" font-weight="600" fill="var(--ink)">100 m</text>
+          </svg>
+        </div>
+        <div class="chips" style="margin-top:8px;gap:6px;flex-wrap:nowrap">
+          <span class="pill alert" style="padding:4px 8px;font-size:11px;white-space:nowrap">Risco</span><span class="pill ok" style="padding:4px 8px;font-size:11px;white-space:nowrap">+ Abrigo</span><span class="pill ok" style="padding:4px 8px;font-size:11px;white-space:nowrap">··· Rota</span>
+        </div>
+        <div class="card" style="padding:10px 12px">
+          <div class="row"><h3>Agora no seu bairro</h3><span class="pill ok">Normal</span></div>
+          <div class="row" style="margin-top:8px;gap:10px;align-items:flex-start">
+            <div><p class="sub" style="margin:0">Rio</p><h3>Normal</h3></div>
+            <div><p class="sub" style="margin:0">Chuva nas próximas horas</p><h3>Fraca</h3></div>
+          </div>
+        </div>
+        <div class="card row" style="padding:10px 12px"><div><h3>Abrigo mais próximo</h3><p class="sub" style="margin:2px 0 0">Escola Paulo Freire, 400 m</p></div><span class="pill ok">Aberto</span></div>
+        <div class="card row" data-go="plan" role="button" tabindex="0" style="padding:10px 12px;cursor:pointer"><div><h3>Plano de fuga do bairro</h3><p class="sub" style="margin:2px 0 0">Veja as rotas antes da chuva</p></div><span class="pill ok">Ver</span></div>
+        <button class="btn ghost" id="simBtn" data-go="alert">Simular chuva forte (demo)</button>
+      </div>
+    </section>
+
+    <!-- 3 Alerta -->
+    <section class="view" id="v-alert" aria-label="Alerta">
+      <div class="alertbar">⚠ ALERTA VERMELHO · Sua rua</div>
+      <div class="body">
+        <h2>Água deve chegar à Rua das Palmeiras em cerca de 45 minutos</h2>
+        <p class="sub">O rio está subindo e a chuva continua forte. Aviso feito com dados oficiais, a previsão e relatos de vizinhos.</p>
+        <div class="card"><div class="row"><h3>Nível previsto na sua rua</h3><span class="pill alert">até 80 cm</span></div>
+          <div class="meter" aria-hidden="true"><i style="width:78%;background:var(--alert)"></i></div></div>
+        <div class="card"><h3>O que fazer agora</h3>
+          <ul class="sub" style="padding-left:18px;margin-top:6px"><li>Pegue documentos e remédios</li><li>Desligue a energia geral</li><li>Escolha: sair pela rota segura ou subir ao andar mais alto</li></ul></div>
+        <button class="btn alert" data-go="route">Vou sair: ver rota segura</button>
+        <button class="btn ghost" data-go="stay">Vou ficar em casa</button>
+      </div>
+    </section>
+
+    <!-- 4 Rota -->
+    <section class="view" id="v-route" aria-label="Rota segura">
+      <div class="body">
+        <h2>Rota segura</h2>
+        <p class="sub">Evita ruas alagadas e trechos sem iluminação.</p>
+        <div class="chips" role="group" aria-label="Como você vai">
+          <button class="chip on" data-mode>A pé</button><button class="chip" data-mode>Cadeira de rodas</button><button class="chip" data-mode>Com idoso</button><button class="chip" data-mode>De carro</button>
+        </div>
+        <div class="map" style="margin-top:12px">
+          <svg viewBox="0 0 320 230" role="img" aria-label="Rota evitando ruas alagadas até a Escola Municipal Paulo Freire">
+            <rect width="320" height="230" fill="var(--bg)"/>
+            <g stroke="var(--line)" stroke-width="10" fill="none" stroke-linecap="round"><path d="M20 40H300"/><path d="M20 100H300"/><path d="M20 150H300"/><path d="M70 20V170"/><path d="M160 20V170"/><path d="M250 20V170"/></g>
+            <path d="M70 100H160V150" stroke="var(--alert)" stroke-width="10" fill="none" stroke-linecap="round" opacity=".35"/>
+            <text x="76" y="124" font-size="10" font-weight="700" fill="var(--alert)">alagada</text>
+            <path d="M160 150H250V54" stroke="var(--brand)" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 10"/>
+            <text x="168" y="141" font-size="10" font-weight="700" fill="var(--brand)">desvio seguro</text>
+            <circle cx="160" cy="150" r="9" fill="var(--brand)" stroke="#fff" stroke-width="3"/>
+            <rect x="238" y="26" width="26" height="26" rx="7" fill="var(--ok)"/><text x="244" y="45" font-size="16" fill="#fff" font-weight="700">+</text>
+          </svg>
+        </div>
+        <div class="card"><div class="row"><div><h3>Escola Municipal Paulo Freire</h3><p class="sub" style="margin:2px 0 0">Abrigo oficial · 400 m · 7 min a pé</p></div><span class="pill ok">Vagas</span></div>
+          <p class="sub" style="margin-top:8px">214 de 400 vagas ocupadas · acessível · aceita animais</p></div>
+        <button class="btn" data-go="walk">Iniciar caminho</button>
+      </div>
+    </section>
+
+    <!-- 5 Caminhando -->
+    <section class="view" id="v-walk" aria-label="Em rota">
+      <div class="body">
+        <span class="pill alert">Em rota segura</span>
+        <div class="big" id="meters">400 m</div>
+        <p class="sub">Siga em frente e vire à esquerda na Av. Central.</p>
+        <div class="meter"><i id="bar"></i></div>
+        <div class="card row"><div style="display:flex;gap:10px;align-items:center"><div class="avatar">J</div><div><h3>Seu filho João</h3><p class="sub" style="margin:2px 0 0">Foi avisado e acompanha você</p></div></div><span class="pill ok">Avisado</span></div>
+        <div class="card"><h3>Sem internet?</h3><p class="sub" style="margin-top:4px">As instruções também chegam por SMS e a rota fica salva no celular.</p></div>
+        <button class="btn" data-go="arrived">Cheguei ao abrigo</button>
+      </div>
+    </section>
+
+    <!-- 6 Chegada -->
+    <section class="view" id="v-arrived" aria-label="Chegada">
+      <div class="body" style="text-align:center;padding-top:36px">
+        <svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="40" fill="var(--ok-bg)"/><path d="M26 43l11 11 21-24" stroke="var(--ok)" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <h2 style="margin-top:14px">Você está em segurança</h2>
+        <p class="sub">Check-in feito na Escola Paulo Freire. Sua família e a Defesa Civil já sabem que você chegou.</p>
+        <div class="card" style="text-align:left"><div class="row"><h3>Família avisada</h3><span class="pill ok">3 de 3</span></div><p class="sub" style="margin-top:4px">João, Ana e Dona Lúcia receberam sua confirmação.</p></div>
+        <button class="btn" data-go="map">Ver mapa de enchentes do bairro</button>
+        <button class="btn ghost" data-go="home">Voltar ao início</button>
+      </div>
+    </section>
+
+    <!-- 7 Ficar em casa -->
+    <section class="view" id="v-stay" aria-label="Ficar em casa">
+      <div class="body">
+        <span class="pill warn">Caminho B · Seu José fica em casa</span>
+        <h2 style="margin-top:10px">Fique no andar mais alto</h2>
+        <p class="sub">Rua das Palmeiras, 120. Água prevista até 80 cm em cerca de 40 minutos.</p>
+        <div class="card"><h3>Faça agora</h3>
+          <ul class="sub" style="padding-left:18px;margin-top:6px"><li>Suba com documentos, remédios e carregador</li><li>Desligue a energia geral</li><li>Não atravesse água corrente</li></ul></div>
+        <div class="card row"><div><h3>Precisa de resgate?</h3><p class="sub" style="margin:2px 0 0">Defesa Civil: 199 · Sua localização vai junto.</p></div></div>
+        <button class="btn" data-go="report">Relatar nível da água</button>
+        <button class="btn ghost" data-go="map">Ver mapa de enchentes</button>
+      </div>
+    </section>
+
+    <!-- 8 Relato -->
+    <section class="view" id="v-report" aria-label="Relato colaborativo">
+      <div class="body">
+        <h2>Relatar situação</h2>
+        <p class="sub">Você está em casa? Seu relato ajuda vizinhos e a Defesa Civil.</p>
+        <label class="field" for="rua">Onde?<input id="rua" value="Rua das Palmeiras, 120 (sua casa)"></label>
+        <p class="field" style="margin-bottom:0">Nível da água na rua</p>
+        <div class="chips" role="group" aria-label="Nível da água">
+          <button class="chip" data-lvl>Poça</button><button class="chip" data-lvl>Tornozelo</button><button class="chip on" data-lvl>Joelho</button><button class="chip" data-lvl>Cintura</button>
+        </div>
+        <div class="card row"><div><h3>Adicionar foto</h3><p class="sub" style="margin:2px 0 0">Opcional. Rostos são desfocados.</p></div><span class="pill ok">Opcional</span></div>
+        <button class="btn" id="sendReport">Enviar relato</button>
+      </div>
+    </section>
+
+    <!-- 9 Relato enviado -->
+    <section class="view" id="v-sent" aria-label="Relato enviado">
+      <div class="body">
+        <h2>Relato enviado</h2>
+        <p class="sub">Obrigado, Seu José! Seu relato ajuda os vizinhos e a Defesa Civil a saber onde a água está.</p>
+        <div class="st"><i>✓</i><div><b>Relato enviado</b><br>Joelho, Rua das Palmeiras, 14:14</div></div>
+        <div class="st"><i>✓</i><div><b>Entra no mapa de enchentes</b><br>Os vizinhos da área já podem ver</div></div>
+        <div class="st"><i>✓</i><div><b>Defesa Civil avisada</b><br>A equipe recebe o relato no painel</div></div>
+        <button class="btn" data-go="map">Ver mapa de enchentes</button>
+      </div>
+    </section>
+
+    <!-- 10 Mapa de enchentes -->
+    <section class="view" id="v-map" aria-label="Mapa de enchentes">
+      <div class="body">
+        <div class="row"><h2>Mapa de enchentes</h2><span class="pill ok">14:22</span></div>
+        <p class="sub" style="margin-top:2px">Chuva forte e rio alto na região</p>
+        <div class="map" style="margin-top:10px">
+          <svg viewBox="0 0 320 190" role="img" aria-label="Mapa com três áreas: Rua das Palmeiras confirmada, 92%; Rua Ipê provável, 68%; Rua das Acácias possível, 35%">
+            <rect width="320" height="190" fill="var(--bg)"/>
+            <g stroke="var(--line)" stroke-width="9" fill="none" stroke-linecap="round"><path d="M16 40H304"/><path d="M16 95H304"/><path d="M16 140H304"/><path d="M70 14V150"/><path d="M160 14V150"/><path d="M250 14V150"/></g>
+            <rect x="82" y="84" width="150" height="22" rx="11" fill="var(--alert)" opacity=".75"/>
+            <text x="86" y="124" font-size="11" font-weight="800" fill="var(--ink)">Palmeiras 92%</text>
+            <rect x="152" y="28" width="22" height="82" rx="11" fill="var(--warn)" opacity=".7"/>
+            <text x="180" y="62" font-size="11" font-weight="800" fill="var(--ink)">Ipê 68%</text>
+            <rect x="59" y="28" width="22" height="50" rx="11" fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-dasharray="5 4"/>
+            <text x="14" y="22" font-size="11" font-weight="800" fill="var(--ink)">Acácias 35%</text>
+          </svg>
+        </div>
+        <div class="zone"><span class="pc" style="color:var(--alert)">92%</span><div><h3>Rua das Palmeiras <span class="pill alert" style="padding:2px 8px">Confirmado</span></h3><p>Defesa Civil, dados oficiais de chuva e 5 relatos de moradores.</p></div></div>
+        <div class="zone"><span class="pc" style="color:#8a5a00">68%</span><div><h3>Rua Ipê <span class="pill warn" style="padding:2px 8px">Provável</span></h3><p>3 relatos de moradores e muita chuva na região.</p></div></div>
+        <div class="zone"><span class="pc" style="color:var(--muted)">35%</span><div><h3>Rua das Acácias <span class="pill val" style="padding:2px 8px">Possível</span></h3><p>Poucas informações até agora.</p></div></div>
+        <button class="btn ghost" data-go="home">Recomeçar a jornada</button>
+      </div>
+    </section>
+
+    <!-- 11 Plano de fuga -->
+    <section class="view" id="v-plan" aria-label="Plano de fuga do bairro">
+      <div class="body">
+        <h2>Plano de fuga</h2>
+        <p class="sub" style="margin-top:2px">Rotas fixas, feitas com os dados de onde mais alagou. Combine com a família antes da chuva.</p>
+        <div class="map" style="margin-top:10px">
+          <svg viewBox="0 0 320 168" role="img" aria-label="Plano de fuga: pontos que já alagaram, rota principal e alternativa até os abrigos, e trechos para evitar">
+            <rect width="320" height="168" fill="var(--bg)"/>
+            <g fill="var(--line)" opacity=".8">
+              <rect x="12" y="12" width="52" height="18" rx="4"/><rect x="76" y="12" width="78" height="18" rx="4"/><rect x="166" y="12" width="78" height="18" rx="4"/><rect x="256" y="12" width="52" height="18" rx="4"/>
+              <rect x="12" y="42" width="52" height="36" rx="4"/><rect x="166" y="42" width="78" height="36" rx="4"/><rect x="256" y="42" width="52" height="36" rx="4"/>
+              <rect x="12" y="90" width="52" height="36" rx="4"/><rect x="76" y="90" width="78" height="36" rx="4"/><rect x="166" y="90" width="78" height="36" rx="4"/><rect x="256" y="90" width="52" height="36" rx="4"/>
+              <rect x="12" y="138" width="52" height="16" rx="4"/><rect x="76" y="138" width="78" height="16" rx="4"/><rect x="166" y="138" width="78" height="16" rx="4"/><rect x="256" y="138" width="52" height="16" rx="4"/>
+            </g>
+            <g fill="var(--alert)">
+              <ellipse cx="150" cy="140" rx="104" ry="22" opacity=".22"/>
+              <ellipse cx="160" cy="132" rx="66" ry="12" opacity=".28"/>
+              <ellipse cx="46" cy="92" rx="26" ry="12" opacity=".2"/>
+            </g>
+            <path d="M80 132H240" stroke="var(--alert)" stroke-width="4" stroke-dasharray="2 6" stroke-linecap="round" fill="none"/>
+            <text x="88" y="150" font-size="9" font-weight="800" fill="var(--alert)" stroke="var(--card)" stroke-width="3" paint-order="stroke">Alagou 4 vezes: evite</text>
+            <text x="14" y="108" font-size="8.5" font-weight="800" fill="var(--alert)" stroke="var(--card)" stroke-width="3" paint-order="stroke">Alagou 2x</text>
+            <path d="M160 132V84H250V38" stroke="var(--ok)" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M160 84H70V38" stroke="var(--ok)" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 6"/>
+            <text x="172" y="78" font-size="9" font-weight="800" fill="var(--ok)" stroke="var(--card)" stroke-width="3" paint-order="stroke">Rota principal</text>
+            <text x="80" y="78" font-size="8.5" font-weight="700" fill="var(--ok)" stroke="var(--card)" stroke-width="3" paint-order="stroke">alternativa</text>
+            <path d="M250 8c-9 0-15 6-15 14 0 10 15 22 15 22s15-12 15-22c0-8-6-14-15-14z" fill="var(--ok)" stroke="#fff" stroke-width="2"/>
+            <text x="244.5" y="28" font-size="14" fill="#fff" font-weight="800">+</text>
+            <text x="268" y="22" font-size="10" font-weight="800" fill="var(--ok)" stroke="var(--card)" stroke-width="3" paint-order="stroke">Escola</text><text x="268" y="33" font-size="9" font-weight="600" fill="var(--muted)" stroke="var(--card)" stroke-width="3" paint-order="stroke">400 m</text>
+            <path d="M70 8c-7 0-12 5-12 11 0 8 12 18 12 18s12-10 12-18c0-6-5-11-12-11z" fill="var(--ok)" stroke="#fff" stroke-width="2" opacity=".85"/>
+            <text x="65.5" y="25" font-size="11" fill="#fff" font-weight="800">+</text>
+            <text x="86" y="22" font-size="9" font-weight="800" fill="var(--ok)" stroke="var(--card)" stroke-width="3" paint-order="stroke">Igreja</text><text x="86" y="32" font-size="8.5" font-weight="600" fill="var(--muted)" stroke="var(--card)" stroke-width="3" paint-order="stroke">650 m</text>
+            <circle cx="160" cy="132" r="7" fill="var(--brand)" stroke="#fff" stroke-width="3"/>
+            <text x="170" y="124" font-size="10" font-weight="800" fill="var(--ink)" stroke="var(--card)" stroke-width="3" paint-order="stroke">Sua casa</text>
+            <text x="266" y="62" font-size="8.5" font-weight="700" fill="var(--muted)" stroke="var(--card)" stroke-width="3" paint-order="stroke">↑ mais alto</text>
+          </svg>
+        </div>
+        <div class="chips" style="margin-top:8px;gap:6px;flex-wrap:nowrap">
+          <span class="pill alert" style="padding:4px 8px;font-size:11px;white-space:nowrap">Já alagou</span><span class="pill ok" style="padding:4px 8px;font-size:11px;white-space:nowrap">Rota principal</span><span class="pill" style="background:var(--bg);color:var(--ink);padding:4px 8px;font-size:11px;white-space:nowrap">Alternativa</span>
+        </div>
+        <div class="card" style="padding:10px 12px"><h3>Saia por cima</h3><p class="sub" style="margin:2px 0 0">Suba a Rua Ipê e siga pela Av. Central até a Escola Paulo Freire: 7 min a pé, sem passar por trecho que alagou.</p></div>
+        <button class="btn" id="savePlan">Salvar no celular (sem internet)</button>
+        <button class="btn ghost" id="sharePlan">Mandar para a família</button>
+      </div>
+    </section>
+
+    <nav class="tabs" id="tabs" aria-label="Menu principal">
+      <button class="on" data-go="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6 7-11a7 7 0 0 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Início</button>
+      <button data-go="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 19c6 0 2-14 14-14"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="5" r="2"/></svg>Rotas</button>
+      <button data-go="report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Relatar</button>
+      <button data-go="map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9c3-3 6 3 9 0s6 3 9 0M3 15c3-3 6 3 9 0s6 3 9 0"/></svg>Enchentes</button>
+    </nav>
+  </div></div>
+</div>
+
+<script>
+// Passos do roteiro (lado esquerdo). "GRP" é só um título de grupo.
+const PASSOS = [
+  ["login", "Entrar com celular e endereço"],
+  ["home", "Início do bairro"],
+  ["plan", "Plano de fuga (antes da chuva)"],
+  ["alert", "Alerta vermelho da sua rua"],
+  ["GRP", "CAMINHO A · DONA MARIA SAI"],
+  ["route", "Rota segura até o abrigo"],
+  ["walk", "Caminho guiado, família avisada"],
+  ["arrived", "Check-in no abrigo"],
+  ["GRP", "CAMINHO B · SEU JOSÉ FICA"],
+  ["stay", "Fique no andar mais alto"],
+  ["report", "Relato do nível da água"],
+  ["sent", "Relato enviado"],
+  ["GRP", "DOS DOIS CAMINHOS"],
+  ["map", "Mapa de enchentes com confiança"]
+];
+
+// Qual aba do menu de baixo fica acesa em cada tela
+const ABA = { home:"home", alert:"home", stay:"home", plan:"route", route:"route", walk:"route", arrived:"route", report:"report", sent:"report", map:"map" };
+
+// Horário que aparece no celular em cada tela
+const HORA = { home:"14:02", plan:"14:03", alert:"14:09", route:"14:10", stay:"14:11", walk:"14:12", report:"14:13", sent:"14:14", arrived:"14:17", map:"14:22" };
+
+const $ = (seletor) => document.querySelector(seletor);
+const $$ = (seletor) => [...document.querySelectorAll(seletor)];
+let contagem = null; // timer da distância até o abrigo
+
+// Desenha a lista de passos e marca o passo atual
+function desenharPassos(atual) {
+  let numero = 0;
+  $("#steps").innerHTML = PASSOS.map(([id, texto]) => {
+    if (id === "GRP") return `<li class="grp" aria-hidden="true">${texto}</li>`;
+    numero++;
+    const classe = id === atual ? "on" : "";
+    return `<li tabindex="0" role="button" data-go="${id}" class="${classe}"><b>${numero}</b>${texto}</li>`;
+  }).join("");
+}
+
+// Mostra uma mensagem no topo do celular por 4 segundos
+function mostrarAviso(titulo, texto) {
+  const aviso = $("#toast");
+  aviso.innerHTML = `<b>${titulo}</b>${texto}`;
+  aviso.classList.add("on");
+  setTimeout(() => aviso.classList.remove("on"), 4200);
+}
+
+// Troca de tela
+function ir(id) {
+  $$(".view").forEach(tela => tela.classList.toggle("on", tela.id === "v-" + id));
+  $("#tabs").style.display = id === "login" ? "none" : "flex";
+  if (HORA[id]) $("#clock").textContent = HORA[id];
+  $$("#tabs button").forEach(aba => aba.classList.toggle("on", aba.dataset.go === ABA[id]));
+  desenharPassos(id);
+
+  if (id === "alert") mostrarAviso("AvisaRua · Alerta vermelho", "Água na Rua das Palmeiras em ~45 min. Toque para ver a rota.");
+  if (id === "walk") iniciarCaminhada();
+}
+
+// Distância até o abrigo diminuindo de 40 em 40 metros
+function iniciarCaminhada() {
+  clearInterval(contagem);
+  let metros = 400;
+  $("#meters").textContent = metros + " m";
+  $("#bar").style.width = "0";
+  setTimeout(() => $("#bar").style.width = "100%", 50);
+  contagem = setInterval(() => {
+    metros = Math.max(0, metros - 40);
+    $("#meters").textContent = metros + " m";
+    if (metros === 0) clearInterval(contagem);
+  }, 450);
+}
+
+// Cliques
+document.addEventListener("click", (e) => {
+  // qualquer coisa com data-go leva para outra tela
+  const destino = e.target.closest("[data-go]");
+  if (destino) { ir(destino.dataset.go); return; }
+
+  // perfil de mobilidade na rota (a pé, cadeira de rodas...)
+  const perfil = e.target.closest("[data-mode]");
+  if (perfil) {
+    $$("[data-mode]").forEach(b => b.classList.toggle("on", b === perfil));
+    mostrarAviso("Rota recalculada", "Perfil: " + perfil.textContent + ". Trechos sem rampa ou com degraus foram evitados.");
+  }
+
+  // nível da água no relato
+  const nivel = e.target.closest("[data-lvl]");
+  if (nivel) $$("[data-lvl]").forEach(b => b.classList.toggle("on", b === nivel));
+
+  if (e.target.id === "sendReport") ir("sent");
+  if (e.target.id === "savePlan") mostrarAviso("Plano salvo", "Fica no celular e abre sem internet.");
+  if (e.target.id === "sharePlan") mostrarAviso("Enviado à família", "Maria, João e Ana receberam o plano de fuga.");
+});
+
+// Enter ou espaço também abrem os passos (teclado)
+document.addEventListener("keydown", (e) => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.matches(".steps li")) {
+    e.preventDefault();
+    ir(e.target.dataset.go);
+  }
+});
+
+// Começa na tela de login, sem o menu de baixo
+desenharPassos("login");
+$("#tabs").style.display = "none";
+</script>
+</body>
+</html>
